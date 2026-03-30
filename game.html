@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="th" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Awakening Hub - B.Grimm</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        bgrimm: {
+                            orange: '#FF6727', darkGrey: '#63666F', lightGrey: '#989AA5',
+                            orangeLight: '#FF9956', orangeDark: '#C43400', offWhite: '#FCFEFF',
+                            shade0: '#EBECF0', shade1: '#D9DAE4', shade2: '#C9CAD4'
+                        }
+                    },
+                    // เปลี่ยนเป็น Noto Sans Thai
+                    fontFamily: { sans: ['"Noto Sans Thai"', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* นำเข้า Noto Sans Thai จาก Google Fonts */
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700&display=swap');
+        
+        body { font-family: 'Noto Sans Thai', sans-serif; transition: background-color 0.3s, color 0.3s; }
+        .glass-panel { backdrop-filter: blur(12px); transition: all 0.3s ease; }
+        
+        .btn-premium { background: linear-gradient(to right, #FF6727, #FF9956); color: #FFFFFF; transition: all 0.3s ease; }
+        .btn-premium:hover { transform: translateY(-2px); box-shadow: 0 8px 15px -3px rgba(255, 103, 39, 0.4); }
+
+        .option-card { transition: all 0.2s ease; cursor: pointer; border-width: 2px; border-color: transparent; }
+        .option-card:hover { border-color: #FF6727; transform: scale(1.02); }
+        .dark .option-card { border-color: rgba(255,255,255,0.05); }
+        .dark .option-card:hover { border-color: #FF6727; }
+
+        .pulse-glow { animation: pulseGlow 2s infinite; }
+        @keyframes pulseGlow { 0% { box-shadow: 0 0 0 0 rgba(255, 103, 39, 0.4); } 70% { box-shadow: 0 0 0 20px rgba(255, 103, 39, 0); } 100% { box-shadow: 0 0 0 0 rgba(255, 103, 39, 0); } }
+    </style>
+</head>
+<body class="flex items-center justify-center h-screen bg-bgrimm-shade0 dark:bg-gray-900 text-bgrimm-darkGrey dark:text-gray-200 bg-[url('https://www.transparenttextures.com/patterns/grid.png')] dark:bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] overflow-hidden">
+
+    <button onclick="toggleTheme()" class="absolute top-4 right-4 p-3 rounded-full bg-white dark:bg-gray-800 shadow-lg text-bgrimm-orange hover:scale-110 transition border border-bgrimm-shade1 dark:border-gray-700 z-50">
+        <svg id="theme-icon-dark" class="w-6 h-6 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+        <svg id="theme-icon-light" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+    </button>
+
+    <div id="game-container" class="max-w-xl w-full mx-4 p-8 md:p-10 glass-panel bg-white/95 dark:bg-gray-800/95 border border-bgrimm-shade1 dark:border-gray-700 rounded-3xl relative shadow-2xl dark:shadow-[0_0_30px_rgba(0,0,0,0.5)]">
+        
+        <div class="absolute top-0 left-0 h-1.5 bg-gradient-to-r from-bgrimm-orange to-bgrimm-orangeLight transition-all duration-500 ease-out" id="progress" style="width: 14%"></div>
+
+        <div id="loading-overlay" class="hidden absolute inset-0 glass-panel bg-white/95 dark:bg-gray-800/95 flex flex-col items-center justify-center z-40 text-center rounded-3xl">
+            <div class="w-20 h-20 rounded-full bg-bgrimm-orange/20 flex items-center justify-center pulse-glow mb-6">
+                <svg class="animate-spin h-10 w-10 text-bgrimm-orange" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+            </div>
+            <h3 class="text-xl font-bold dark:text-white mb-2">Analyzing Cognitive Pattern...</h3>
+            <p class="text-bgrimm-orange font-medium text-sm">กำลังคัดสรรบ้านและระดับ AI ประจำตัวคุณ</p>
+        </div>
+
+        <div id="scene-1" class="transition-opacity duration-500">
+            <div class="inline-block px-3 py-1 rounded-full bg-bgrimm-orange/10 border border-bgrimm-orange/20 text-bgrimm-orange text-xs font-semibold tracking-wider mb-5">
+                B.GRIMM NOTEBOOKLM
+            </div>
+            <h1 class="text-3xl md:text-4xl font-bold mb-2 leading-tight dark:text-white">The Awakening <span class="text-bgrimm-orange">Hub</span></h1>
+            <p class="mb-8 text-sm md:text-base leading-relaxed font-light dark:text-gray-400">ระบุตัวตนของคุณเพื่อเริ่มการซิงโครไนซ์ และรับการคัดสรรเข้าสู่ "4 บ้านแห่งขุมพลังปัญญา"</p>
+            
+            <div class="space-y-2 mb-6">
+                <label class="text-xs font-semibold uppercase tracking-wider ml-1 dark:text-gray-400">Employee Info / Callsign</label>
+                <input type="text" id="username" placeholder="ชื่อเล่น หรือ รหัสพนักงาน" class="w-full bg-bgrimm-shade0 dark:bg-gray-900 border border-bgrimm-shade1 dark:border-gray-700 p-4 rounded-xl outline-none focus:border-bgrimm-orange dark:focus:border-bgrimm-orange text-lg transition-all dark:text-white placeholder-bgrimm-lightGrey dark:placeholder-gray-500">
+            </div>
+            <button onclick="nextScene(2)" class="w-full btn-premium p-4 rounded-xl font-bold text-lg shadow-lg shadow-orange-500/30">เริ่มการทดสอบ</button>
+        </div>
+
+        <div id="scene-2" class="hidden">
+            <h2 class="text-2xl mb-2 font-bold dark:text-white">Phase 1: Readiness</h2>
+            <p class="mb-6 text-sm font-light leading-relaxed dark:text-gray-400">Q1: คุณใช้งานเครื่องมือ GenAI (เช่น ChatGPT, Gemini) บ่อยแค่ไหนในการทำงานปกติ?</p>
+            <div class="space-y-3">
+                <button onclick="addLevelScore(4, 3, 'Everyday')" class="w-full text-left p-4 rounded-xl option-card bg-bgrimm-shade0 dark:bg-gray-900"><div class="font-semibold dark:text-white">ทุกวัน / แทบทุกวัน</div></button>
+                <button onclick="addLevelScore(3, 3, 'Weekly')" class="w-full text-left p-4 rounded-xl option-card bg-bgrimm-shade0 dark:bg-gray-900"><div class="font-semibold dark:text-white">1-3 ครั้งต่อสัปดาห์</div></button>
+                <button onclick="addLevelScore(2, 3, 'Monthly')" class="w-full text-left p-4 rounded-xl option-card bg-bgrimm-shade0 dark:bg-gray-900"><div class="font-semibold dark:text-white">1-3 ครั้งต่อเดือน</div></button>
+                <button onclick="addLevelScore(1, 3, 'Never')" class="w-full text-left p-4 rounded-xl option-card bg-bgrimm-shade0 dark:bg-gray-900"><div class="font-semibold dark:text-white">ไม่เคยใช้เลย</div></button>
+            </div>
+        </div>
+
+        <div id="scene-3" class="hidden">
+            <h2 class="text-2xl mb-2 font-bold dark:text-white">Phase 1: Readiness</h2>
+            <p class="mb-6 text-sm font-light leading-relaxed dark:text-gray-400">Q2: คุณเข้าใจแนวคิด "Source Grounding" (AI ตอบจากเอกสารที่เราให้เท่านั้น) แค่ไหน?</p>
+            <div class="space-y-3">
+                <button onclick="addLevelScore(4, 4, 'KnowWell')" class="w-full text-left p-4 rounded-xl option-card bg-bgrimm-shade0 dark:bg-gray-900"><div class="font-semibold dark:text-white">💡 เข้าใจชัดเจน และเคยใช้เทคนิคนี้</div></button>
+                <button onclick="addLevelScore(2, 4, 'HeardOf')" class="w-full text-left p-4 rounded-xl option-card bg-bgrimm-shade0 dark:bg-gray-900"><div class="font-semibold dark:text-white">📖 เคยได้ยินมาบ้าง แต่ยังไม่เคยลองใช้</div></button>
+                <button onclick="addLevelScore(1, 4, 'NeverHeard')" class="w-full text-left p-4 rounded-xl option-card bg-bgrimm-shade0 dark:bg-gray-900"><div class="font-semibold dark:text-white">❓ ไม่เคยได้ยินมาก่อน</div></button>
+            </div>
+        </div>
+
+        <div id="scene-4" class="hidden">
+            <div class="text-bgrimm-orange text-xs font-bold tracking-widest mb-2 uppercase">The Sorting Phase</div>
+            <h2 class="text-2xl mb-2 font-bold dark:text-white">Q3: การรับมือข้อมูล</h2>
+            <p class="mb-6 text-sm font-light leading-relaxed dark:text-gray-400">เมื่อได้รับรายงานหนา 100 หน้า สิ่งแรกที่คุณมักจะทำคือ...</p>
+            <div class="space-y-3">
+                <button onclick="addHouseScore('Strategis', 5, 'Executive')" class="w-full text-left p-4 rounded-xl option-card bg-bgrimm-shade0 dark:bg-gray-900"><div class="font-semibold dark:text-white">🎯 กวาดสายตาหาบทสรุปผู้บริหารทันที</div></button>
+                <button onclick="addHouseScore('Structura', 5, 'TOC')" class="w-full text-left p-4 rounded-xl option-card bg-bgrimm-shade0 dark:bg-gray-900"><div class="font-semibold dark:text-white">📑 อ่านสารบัญและทำความเข้าใจโครงสร้างก่อน</div></button>
+                <button onclick="addHouseScore('Analytica', 5, 'Data')" class="w-full text-left p-4 rounded-xl option-card bg-bgrimm-shade0 dark:bg-gray-900"><div class="font-semibold dark:text-white">📊 เจาะดูตารางข้อมูลและตัวเลขที่สำคัญ</div></button>
+                <button onclick="addHouseScore('Innovia', 5, 'Ideas')" class="w-full text-left p-4 rounded-xl option-card bg-bgrimm-shade0 dark:bg-gray-900"><div class="font-semibold dark:text-white">💡 ตั้งคำถามว่าข้อมูลนี้เอาไปต่อยอดทำอะไรได้บ้าง</div></button>
+            </div>
+        </div>
+
+        <div id="scene-5" class="hidden">
+            <div class="text-bgrimm-orange text-xs font-bold tracking-widest mb-2 uppercase">The Sorting Phase</div>
+            <h2 class="text-2xl mb-2 font-bold dark:text-white">Q4: บทบาทในทีม</h2>
+            <p class="mb-6 text-sm font-light leading-relaxed dark:text-gray-400">เวลาทำงานร่วมกับทีม คุณมักจะรับบทเป็นคนแบบไหน?</p>
+            <div class="space-y-3">
+                <button onclick="addHouseScore('Analytica', 6, 'Checker')" class="w-full text-left p-4 rounded-xl option-card bg-bgrimm-shade0 dark:bg-gray-900"><div class="font-semibold dark:text-white">🔎 คนคอยเช็กความถูกต้องและหาข้อมูลซัพพอร์ต</div></button>
+                <button onclick="addHouseScore('Innovia', 6, 'Creator')" class="w-full text-left p-4 rounded-xl option-card bg-bgrimm-shade0 dark:bg-gray-900"><div class="font-semibold dark:text-white">✨ คนโยนไอเดียแปลกใหม่เข้าวงประชุม</div></button>
+                <button onclick="addHouseScore('Structura', 6, 'Organizer')" class="w-full text-left p-4 rounded-xl option-card bg-bgrimm-shade0 dark:bg-gray-900"><div class="font-semibold dark:text-white">📋 คนสรุปและจัดแจงว่าใครต้องทำอะไรเป็นระบบ</div></button>
+                <button onclick="addHouseScore('Strategis', 6, 'Decider')" class="w-full text-left p-4 rounded-xl option-card bg-bgrimm-shade0 dark:bg-gray-900"><div class="font-semibold dark:text-white">🧭 คนเคาะทิศทางและตัดสินใจในภาพรวม</div></button>
+            </div>
+        </div>
+
+        <div id="scene-6" class="hidden">
+            <div class="text-bgrimm-orange text-xs font-bold tracking-widest mb-2 uppercase">The Final Question</div>
+            <h2 class="text-2xl mb-2 font-bold dark:text-white">Q5: ความคาดหวัง</h2>
+            <p class="mb-6 text-sm font-light leading-relaxed dark:text-gray-400">สิ่งที่คุณคาดหวังที่สุดจากเครื่องมือ NotebookLM คือ...</p>
+            <div class="space-y-3">
+                <button onclick="addHouseScoreAndSubmit('Innovia', 'Connect')" class="w-full text-left p-4 rounded-xl option-card bg-bgrimm-shade0 dark:bg-gray-900"><div class="font-semibold dark:text-white">🧠 หาความเชื่อมโยงของข้อมูลเพื่อสร้างไอเดียใหม่</div></button>
+                <button onclick="addHouseScoreAndSubmit('Strategis', 'Summarize')" class="w-full text-left p-4 rounded-xl option-card bg-bgrimm-shade0 dark:bg-gray-900"><div class="font-semibold dark:text-white">⚡ ประหยัดเวลาอ่านสรุปรายงานยาวๆ เพื่อตัดสินใจ</div></button>
+                <button onclick="addHouseScoreAndSubmit('Analytica', 'Extract')" class="w-full text-left p-4 rounded-xl option-card bg-bgrimm-shade0 dark:bg-gray-900"><div class="font-semibold dark:text-white">📌 ดึงข้อมูลและ Fact เฉพาะเจาะจงได้อย่างแม่นยำ</div></button>
+                <button onclick="addHouseScoreAndSubmit('Structura', 'Organize')" class="w-full text-left p-4 rounded-xl option-card bg-bgrimm-shade0 dark:bg-gray-900"><div class="font-semibold dark:text-white">🗂️ สร้างคลังความรู้ส่วนตัวที่เป็นระเบียบ ค้นหาง่าย</div></button>
+            </div>
+        </div>
+
+        <div id="scene-7" class="hidden text-center">
+            <div id="house-emoji" class="text-6xl mb-4 drop-shadow-lg">🏰</div>
+            <h2 class="text-xl text-bgrimm-lightGrey dark:text-gray-400 mb-1 font-medium">ยินดีต้อนรับสู่</h2>
+            <h1 id="house-name" class="text-4xl font-bold text-bgrimm-orange mb-3 tracking-wide">House Name</h1>
+            <p id="house-desc" class="text-sm dark:text-gray-300 bg-bgrimm-shade0 dark:bg-gray-900 p-4 rounded-xl border border-bgrimm-shade1 dark:border-gray-700 mb-6 leading-relaxed"></p>
+            
+            <div class="flex justify-between items-center p-4 bg-bgrimm-darkGrey text-white rounded-xl mb-6 shadow-inner">
+                <div class="text-left">
+                    <p class="text-[10px] text-gray-400 uppercase tracking-widest mb-1">AI Readiness Level</p>
+                    <span id="rank-tag" class="font-bold text-xl"></span>
+                </div>
+                <div class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-xl">⚡</div>
+            </div>
+            
+            <p class="text-xs text-bgrimm-lightGrey flex items-center justify-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path></svg>
+                แคปเจอร์หน้าจอนี้ เพื่อใช้แสดงตัวในคลาส
+            </p>
+        </div>
+    </div>
+
+    <script>
+        function toggleTheme() {
+            const html = document.documentElement;
+            html.classList.toggle('dark');
+            const isDark = html.classList.contains('dark');
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+            document.getElementById('theme-icon-light').classList.toggle('hidden');
+            document.getElementById('theme-icon-dark').classList.toggle('hidden');
+        }
+
+        if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+            document.getElementById('theme-icon-light').classList.add('hidden');
+            document.getElementById('theme-icon-dark').classList.remove('hidden');
+        }
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCkX9MvMmg2ewA9fdOK7rOWFCeljsTGF-I",
+            authDomain: "notebooklm-f38c2.firebaseapp.com",
+            projectId: "notebooklm-f38c2",
+            storageBucket: "notebooklm-f38c2.firebasestorage.app",
+            messagingSenderId: "188417421367",
+            appId: "1:188417421367:web:0dba60e60108697ccccfb2"
+        };
+        firebase.initializeApp(firebaseConfig);
+        var db = firebase.firestore();
+
+        let userData = { name: '', q1: '', q2: '', q3: '', q4: '', q5: '', level: '', houseName: '', houseDesc: '', houseEmoji: '' };
+        let levelScore = 0;
+        let houseScores = { Analytica: 0, Innovia: 0, Structura: 0, Strategis: 0 };
+
+        const housesData = {
+            'Analytica': { name: 'House Analytica', emoji: '📊', desc: 'สายเจาะลึกข้อมูล! คุณเป็นคนละเอียด รอบคอบ ชอบอยู่กับข้อมูลและ Fact ในคลาสนี้ NotebookLM จะกลายเป็นเครื่องมือสกัดข้อมูลที่แม่นยำที่สุดของคุณ' },
+            'Innovia': { name: 'House Innovia', emoji: '💡', desc: 'สายริเริ่มสร้างสรรค์! คุณคือนักคิดและนักบุกเบิก ในคลาสนี้ NotebookLM จะกลายเป็นคู่หู Brainstorm ที่ช่วยคุณต่อยอดไอเดียใหม่ๆ ได้อย่างไม่รู้จบ' },
+            'Structura': { name: 'House Structura', emoji: '🗂️', desc: 'สายจัดระเบียบโครงสร้าง! คุณเป็นระบบระเบียบและชอบเห็นภาพรวมชัดเจน ในคลาสนี้คุณจะได้สร้าง Second Brain ที่สมบูรณ์แบบด้วย NotebookLM' },
+            'Strategis': { name: 'House Strategis', emoji: '🎯', desc: 'สายวางกลยุทธ์! คุณคือผู้นำที่ต้องการแก่นของเรื่องเพื่อตัดสินใจไว ในคลาสนี้ NotebookLM จะช่วยคุณย่อยข้อมูลมหาศาลให้เหลือเพียง Insight ที่สำคัญที่สุด' }
+        };
+
+        function nextScene(num) {
+            document.querySelectorAll('[id^="scene-"]').forEach(s => { s.classList.add('hidden'); s.classList.remove('opacity-100'); });
+            const next = document.getElementById(`scene-${num}`);
+            next.classList.remove('hidden');
+            setTimeout(() => next.classList.add('opacity-100'), 50);
+            document.getElementById('progress').style.width = ((num-1) * 16.66) + '%';
+        }
+
+        function addLevelScore(points, nextNum, ansCode) {
+            levelScore += points;
+            if(nextNum === 3) userData.q1 = ansCode;
+            if(nextNum === 4) userData.q2 = ansCode;
+            nextScene(nextNum);
+        }
+
+        function addHouseScore(house, nextNum, ansCode) {
+            houseScores[house]++;
+            if(nextNum === 5) userData.q3 = ansCode;
+            if(nextNum === 6) userData.q4 = ansCode;
+            nextScene(nextNum);
+        }
+
+        function addHouseScoreAndSubmit(house, ansCode) {
+            houseScores[house]++;
+            userData.q5 = ansCode;
+            userData.name = document.getElementById('username').value || 'Unknown Operator';
+            
+            calculateResults();
+            
+            document.getElementById('loading-overlay').classList.remove('hidden');
+            
+            setTimeout(() => {
+                db.collection("game_results").add({
+                    name: userData.name, 
+                    q1_frequency: userData.q1, q2_knowledge: userData.q2,
+                    q3_action: userData.q3, q4_role: userData.q4, q5_expect: userData.q5,
+                    total_score: levelScore, final_level_tag: userData.level,
+                    house: userData.houseId, house_name: userData.houseName,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp() 
+                }).then(() => {
+                    document.getElementById('loading-overlay').classList.add('hidden');
+                    showFinal();
+                }).catch((error) => {
+                    console.error("Firebase Error:", error);
+                    document.getElementById('loading-overlay').classList.add('hidden');
+                    showFinal(); 
+                });
+            }, 2500); 
+        }
+
+        function calculateResults() {
+            if (levelScore <= 2) userData.level = 'AI Newbie';
+            else if (levelScore <= 4) userData.level = 'AI Novice';
+            else if (levelScore <= 6) userData.level = 'AI Explorer';
+            else if (levelScore <= 7) userData.level = 'AI Analyst';
+            else userData.level = 'AI Strategist';
+
+            let maxScore = -1; let finalHouse = 'Analytica';
+            for (let [h, score] of Object.entries(houseScores)) {
+                if (score > maxScore) { maxScore = score; finalHouse = h; }
+            }
+            userData.houseId = finalHouse;
+            userData.houseName = housesData[finalHouse].name;
+            userData.houseDesc = housesData[finalHouse].desc;
+            userData.houseEmoji = housesData[finalHouse].emoji;
+        }
+
+        function showFinal() {
+            document.querySelectorAll('[id^="scene-"]').forEach(s => s.classList.add('hidden'));
+            const next = document.getElementById(`scene-7`);
+            next.classList.remove('hidden');
+            setTimeout(() => next.classList.add('opacity-100'), 50);
+            
+            document.getElementById('house-emoji').innerText = userData.houseEmoji;
+            document.getElementById('house-name').innerText = userData.houseName;
+            document.getElementById('house-desc').innerText = userData.houseDesc;
+            document.getElementById('rank-tag').innerText = userData.level;
+            document.getElementById('progress').style.width = '100%';
+        }
+    </script>
+</body>
+</html>
